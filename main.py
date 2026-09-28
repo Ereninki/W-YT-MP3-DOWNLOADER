@@ -25,6 +25,16 @@ mp3_opts = {
             "outtmpl": "%(title)s.%(ext)s"
         }
 
+mp4_opts = {
+    "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+    "merge_output_format": "mp4",
+    "postprocessors": [{
+        "key": "FFmpegVideoConvertor",
+        "preferedformat": "mp4"
+    }],
+    "outtmpl": "%(title)s.%(ext)s"
+}
+
 def downloadpm3(link: str):
     try:
         ytdlp = yt_dlp.YoutubeDL(mp3_opts)
@@ -36,7 +46,20 @@ def downloadpm3(link: str):
 
     except Exception as e:
         print(e)
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+def downloadmp4(link: str):
+    try:
+        ytdlp = yt_dlp.YoutubeDL(mp4_opts)
+        info = ytdlp.extract_info(link, download=True)
+        rawfilename = ytdlp.prepare_filename(info)
+        title = os.path.splitext(rawfilename)[0]
+        filename = f"{title}.mp4"
+        return filename
+    
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 def file_cleaner(path: str):
     os.remove(path)
@@ -44,6 +67,13 @@ def file_cleaner(path: str):
 @app.get("/download/mp3")
 async def download_mp3(link: str, backgroundtask: BackgroundTasks):
     file = await run_in_threadpool(downloadpm3, link)
+    backgroundtask.add_task(file_cleaner, file)
+
+    return FileResponse(path=file, filename=os.path.basename(file))
+
+@app.get("/download/mp4")
+async def download_mp4(link: str, backgroundtask: BackgroundTasks):
+    file = await run_in_threadpool(downloadmp4, link)
     backgroundtask.add_task(file_cleaner, file)
 
     return FileResponse(path=file, filename=os.path.basename(file))
