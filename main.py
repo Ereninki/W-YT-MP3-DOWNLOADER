@@ -36,6 +36,9 @@ mp4_opts = {
 }
 
 def downloadpm3(link: str):
+    if not "https://youtu.be/" in link and not "https://www.youtube.com/watch" in link and not "https://youtube.com/shorts/" in link:
+        raise HTTPException(400, detail="the link must be a youtube video or a youtube short.")
+    
     try:
         ytdlp = yt_dlp.YoutubeDL(mp3_opts)
         info = ytdlp.extract_info(link, download=True)
@@ -49,6 +52,9 @@ def downloadpm3(link: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 def downloadmp4(link: str):
+    if not "https://youtu.be/" in link and not "https://www.youtube.com/watch" in link and not "https://youtube.com/shorts/" in link:
+        raise HTTPException(400, detail="the link must be a youtube video or a youtube short.")
+
     try:
         ytdlp = yt_dlp.YoutubeDL(mp4_opts)
         info = ytdlp.extract_info(link, download=True)
